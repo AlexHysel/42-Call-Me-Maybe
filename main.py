@@ -58,9 +58,7 @@ class CallMyMaybe:
         print(self.llm._tokenizer.decode(prompt_ids))
         return prompt_ids
 
-def main():
-    cmm = CallMyMaybe()
-    cmm.process_operation('Who is Einstein?\n')
 
 if __name__ == "__main__":
-    main()
+    cmm = CallMyMaybe()
+    cmm.process_operation('Who is Einstein?\n')
