@@ -14,13 +14,15 @@ class CallMyMaybe:
         for k, v in self.word_ids.items():
             self.vocab[v] = k
 
-        operations = None
         with open('input/functions_definition.json') as file:
-            operations = [e['fn_name'] for e in json.load(file)]
-        self.intructions = ("You need to convert question to " +
+            self.funcs = {e['fn_name']: e for e in json.load(file)}
+        for func in self.funcs.values():
+            func.pop('fn_name', None)
+            func.pop('return_type', None)
+
+        self.instruction = self.encode("You need to convert question to " +
             "JSON question following its structure "+
-            f"Allowed functions: {operations}")
-        self.operations = [self.encode(o) for o in operations]
+            f"Allowed functions: {self.funcs.keys()}")
         
     def apply_mask(self, allowed_ids: list[int], logits):
         """Applies mask by setting all forbidden token scores to -infinity"""
@@ -53,40 +55,64 @@ class CallMyMaybe:
                 text = text[-1:]
         return ids
     
-    def print_operation(self, prompt_ids: list[int]):
-        """Used to choose between operations"""
-        operations = self.operations
-        while operations:
-            step = {o[0] for o in operations}
-            logits = self.llm.get_logits_from_input_ids(prompt_ids)
-            logits = self.apply_mask(step, logits)
-            next_token = int(np.argmax(logits))
-            prompt_ids.append(next_token)
-            operations = [o[1:] for o in operations if o[0] == next_token and len(o) > 1]
-        return prompt_ids
+    def decode(self, tokens: List[int]):
+        result = ""
+        for token in tokens:
+            result += self.vocab[token]
+        return result.replace('Ġ', ' ').replace('Ċ', '\n').replace('ĉ', '\t')
+    
+    def get_logits(self, prompt_ids: list[int], mask = None):
+        l = self.llm.get_logits_from_input_ids(self.instruction + prompt_ids)
+        if mask is not None:
+            l = self.apply_mask(mask, l)
+        return l
 
-    def print_constant(self, text: str, prompt_ids: list[int]):
-        """Used to print smth using AI, just like a printer."""
-        text_ids = self.encode(text)
-        for t_id in text_ids:
-            logits = self.llm.get_logits_from_input_ids(prompt_ids)
-            logits = self.apply_mask([t_id], logits)
+    def get_func(self, prompt_ids: list[int]):
+        """Used to choose between operations and return tokens of chosen"""
+        funcs = [self.encode(k) for k in self.funcs.keys()]
+        result = []
+        while funcs:
+            step = {f[0] for f in funcs}
+            logits = self.get_logits(prompt_ids, step)
             next_token = int(np.argmax(logits))
-            prompt_ids.append(next_token)
+            result.append(next_token)
+            funcs = [f[1:] for f in funcs if f[0] == next_token and len(f) > 1]
+        return result
+
+    def add_args(self, func: dict[str: list[str], str: str], prompt_ids: list[int]):
+        """Used to add line with arguments"""
+        prompt_ids += self.encode('\n\t"arguments": {')
+        args = func['args_names']
+        for i, arg in enumerate(args):
+            if i == 0:
+                prompt_ids += self.encode(f'"{arg}": ')
+            else:
+                prompt_ids += self.encode(f', "{arg}": ')
+            while True:
+                logits = self.get_logits(prompt_ids)
+                next = int(np.argmax(logits))
+                if ',' in self.decode([next]):
+                    break
+                else:
+                    prompt_ids.append(next)
+        prompt_ids += self.encode('}\n')
         return prompt_ids
 
     def process_operation(self, prompt: str):
         """Process single operation"""
-        prompt_ids = self.encode(self.intructions + '\n' + prompt + '\n')
-        
-        prompt_ids += self.encode('{\n\t"function": "')
-        prompt_ids = self.print_operation(prompt_ids)
+        prompt_ids = self.encode('\n')
+        prompt_ids += self.encode('{\n\t"prompt": "' + prompt + '",\n')
 
-        prompt_ids += self.encode('",\n\t"arguments": {"')
+        prompt_ids += self.encode('\t"function": "')
+        func = self.get_func(prompt_ids)
+        prompt_ids += func
+        prompt_ids += self.encode('",')
 
-        prompt_ids += self.encode('}\n}')
-        # SHOULD BE REPLACED
-        print(self.llm._tokenizer.decode(prompt_ids))
+        prompt_ids = self.add_args(self.funcs[self.decode(func)], prompt_ids)
+
+        prompt_ids += self.encode('}')
+
+        print(self.decode(prompt_ids))
         return prompt_ids
 
 
