@@ -3,7 +3,7 @@
     "prompt": "What is the square root of 16?"
   },
   {
-    "prompt": "Reverse the string 'hello'"
+    "prompt": "Reverse the string 'hello\n}'\n}"
   },
   {
     "prompt": "Reverse the string 'world'"

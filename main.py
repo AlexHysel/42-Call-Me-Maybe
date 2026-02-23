@@ -31,13 +31,9 @@ class CallMyMaybe:
             masked[id] = logits[id]
         return masked
 
-    def translate(self, text: str) -> str:
-        """Replace spaces, tabs and new line chars with special ones AI understands"""
-        return text.replace(' ', 'Ġ').replace('\n', 'Ċ').replace('\t', 'ĉ')
-
     def encode(self, text: str) -> list[int]:
         """Translate text to list of tokens"""
-        text = self.translate(text)
+        text = text.replace(' ', 'Ġ').replace('\n', 'Ċ').replace('\t', 'ĉ')
         ids = []
         while text:
             match_id = None
@@ -84,24 +80,28 @@ class CallMyMaybe:
         prompt_ids += self.encode('\n\t"arguments": {')
         args = func['args_names']
         for i, arg in enumerate(args):
-            if i == 0:
-                prompt_ids += self.encode(f'"{arg}": ')
-            else:
-                prompt_ids += self.encode(f', "{arg}": ')
+            if i != 0:
+                prompt_ids += self.encode(', ')
+            prompt_ids += self.encode(f'"{arg}": ')
+            if func['args_types'][arg] == 'str':
+                prompt_ids += self.encode('"')
             while True:
                 logits = self.get_logits(prompt_ids)
-                next = int(np.argmax(logits))
-                if ',' in self.decode([next]):
+                next = self.decode([int(np.argmax(logits))])
+                flag = False
+                for i in range(len(next) -1, -1, -1):
+                    if next[i] in [',', '}', '\n']:
+                        next = next[0:i]
+                        flag = True
+                prompt_ids += self.encode(next)
+                if flag:
                     break
-                else:
-                    prompt_ids.append(next)
         prompt_ids += self.encode('}\n')
         return prompt_ids
 
-    def process_operation(self, prompt: str):
+    def process_func(self, prompt: str):
         """Process single operation"""
-        prompt_ids = self.encode('\n')
-        prompt_ids += self.encode('{\n\t"prompt": "' + prompt + '",\n')
+        prompt_ids = self.encode('{\n\t"prompt": "' + prompt + '",\n')
 
         prompt_ids += self.encode('\t"function": "')
         func = self.get_func(prompt_ids)
@@ -122,4 +122,4 @@ if __name__ == "__main__":
     with open('input/function_calling_tests.json') as requests:
         prompts = [t['prompt'] for t in json.load(requests)]
     for p in prompts:
-        cmm.process_operation(p)
+        cmm.process_func(p)
