@@ -85,17 +85,16 @@ class CallMyMaybe:
             prompt_ids += self.encode(f'"{arg}": ')
             if func['args_types'][arg] == 'str':
                 prompt_ids += self.encode('"')
-            while True:
+            flag = True 
+            while flag:
                 logits = self.get_logits(prompt_ids)
                 next = self.decode([int(np.argmax(logits))])
-                flag = False
                 for i in range(len(next) -1, -1, -1):
-                    if next[i] in [',', '}', '\n']:
+                    next = next.replace('\n', '\\n')
+                    if next[i] in [',', '}', '\\n']:
                         next = next[0:i]
-                        flag = True
+                        flag = False
                 prompt_ids += self.encode(next)
-                if flag:
-                    break
         prompt_ids += self.encode('}\n')
         return prompt_ids
 
@@ -112,8 +111,7 @@ class CallMyMaybe:
 
         prompt_ids += self.encode('}')
 
-        print(self.decode(prompt_ids))
-        return prompt_ids
+        return self.decode(prompt_ids)
 
 
 if __name__ == "__main__":
@@ -121,5 +119,7 @@ if __name__ == "__main__":
     prompts = None
     with open('input/function_calling_tests.json') as requests:
         prompts = [t['prompt'] for t in json.load(requests)]
+    output = open('output/function_calling_results.json', 'w')
     for p in prompts:
-        cmm.process_func(p)
+        output.write(cmm.process_func(p) + ',\n')
+        

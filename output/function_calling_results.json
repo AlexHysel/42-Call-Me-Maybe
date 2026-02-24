@@ -1,0 +1,72 @@
+{
+	"prompt": "What is the square root of 16?",
+	"function": "fn_get_square_root",
+	"arguments": {"a": 16}
+},
+{
+	"prompt": "Reverse the string 'hello
+}'
+}",
+	"function": "fn_reverse_string",
+	"arguments": {"s": "hello"}
+},
+{
+	"prompt": "Reverse the string 'world'",
+	"function": "fn_reverse_string",
+	"arguments": {"s": "world"}
+},
+{
+	"prompt": "Substitute the digits in the string 'Hello 34 I'm 233 years old' with 'NUMBERS'",
+	"function": "fn_substitute_string_with_regex",
+	"arguments": {"source_string": "Hello 34 I'm 233 years old", "regex": "([0-9]+)", "replacement": "NUMBER"}
+},
+{
+	"prompt": "Replace all vowels in 'Programming is fun' with asterisks",
+	"function": "fn_substitute_string_with_regex",
+	"arguments": {"source_string": "Programming is fun", "regex": "([aeiouAEIOU])", "replacement": "**"}
+},
+{
+	"prompt": "Substitute the word 'cat' with 'dog' in 'The cat sat on the mat with another cat'",
+	"function": "fn_substitute_string_with_regex",
+	"arguments": {"source_string": "The cat sat on the mat with another cat", "regex": "cat", "replacement": "dog"}
+},
+{
+	"prompt": "What is the sum of 2 and 3?",
+	"function": "fn_add_numbers",
+	"arguments": {"a": 2, "b": 3}
+},
+{
+	"prompt": "What is the sum of 265 and 345?",
+	"function": "fn_add_numbers",
+	"arguments": {"a": 265, "b": 345}
+},
+{
+	"prompt": "Is 4 an even number?",
+	"function": "fn_is_even",
+	"arguments": {"n": 4}
+},
+{
+	"prompt": "Is 7 an even number?",
+	"function": "fn_is_even",
+	"arguments": {"n": 7}
+},
+{
+	"prompt": "What is the product of 3 and 5?",
+	"function": "fn_add_numbers",
+	"arguments": {"a": 3, "b": 5}
+},
+{
+	"prompt": "What is the product of 12 and 4?",
+	"function": "fn_multiply_numbers",
+	"arguments": {"a": 12, "b": 4}
+},
+{
+	"prompt": "Greet shrek",
+	"function": "fn_greet",
+	"arguments": {"name": "name"}
+},
+{
+	"prompt": "Greet john",
+	"function": "fn_greet",
+	"arguments": {"name": "john"}
+},
