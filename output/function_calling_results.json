@@ -5,9 +5,9 @@
 		"arguments": {"a": 16}
 	},
 	{
-		"prompt": "Reverse the string 'hello\n}'\n}",
+		"prompt": "Reverse the string '\"hello\n}'\n}",
 		"function": "fn_reverse_string",
-		"arguments": {"s": "hello\n}"}
+		"arguments": {"s": "hello\n"}
 	},
 	{
 		"prompt": "Reverse the string 'world'",
@@ -17,27 +17,27 @@
 	{
 		"prompt": "Substitute the digits in the string 'Hello 34 I'm 233 years old' with 'NUMBERS'",
 		"function": "fn_substitute_string_with_regex",
-		"arguments": {"source_string": "Hello 34 I'm 233 years old", "regex": "([0-9]+)", "replacement": "NUMBER"}
+		"arguments": {"source_string": "Hello, "regex": "34I'm, "replacement": "NUMBERS"}
 	},
 	{
 		"prompt": "Replace all vowels in 'Programming is fun' with asterisks",
 		"function": "fn_substitute_string_with_regex",
-		"arguments": {"source_string": "Programming is fun", "regex": "([aeiouAEIOU])", "replacement": "**"}
+		"arguments": {"source_string": "Programmingisfun", "regex": "a", "replacement": "asterisk"}
 	},
 	{
 		"prompt": "Substitute the word 'cat' with 'dog' in 'The cat sat on the mat with another cat'",
 		"function": "fn_substitute_string_with_regex",
-		"arguments": {"source_string": "The cat sat on the mat with another cat", "regex": "cat", "replacement": "dog"}
+		"arguments": {"source_string": "Thecatsatonthematwithanothercat", "regex": "cat", "replacement": "dog"}
 	},
 	{
 		"prompt": "What is the sum of 2 and 3?",
 		"function": "fn_add_numbers",
-		"arguments": {"a": 2, "b": 3}
+		"arguments": {"a": 2.0, "b": 3.0}
 	},
 	{
 		"prompt": "What is the sum of 265 and 345?",
 		"function": "fn_add_numbers",
-		"arguments": {"a": 265, "b": 345}
+		"arguments": {"a": 265.0, "b": 345.0}
 	},
 	{
 		"prompt": "Is 4 an even number?",
@@ -51,8 +51,8 @@
 	},
 	{
 		"prompt": "What is the product of 3 and 5?",
-		"function": "fn_add_numbers",
-		"arguments": {"a": 3, "b": 5}
+		"function": "fn_multiply_numbers",
+		"arguments": {"a": 3.0, "b": 5.0}
 	},
 	{
 		"prompt": "What is the product of 12 and 4?",
@@ -62,7 +62,7 @@
 	{
 		"prompt": "Greet shrek",
 		"function": "fn_greet",
-		"arguments": {"name": "name"}
+		"arguments": {"name": "shrek"}
 	},
 	{
 		"prompt": "Greet john",

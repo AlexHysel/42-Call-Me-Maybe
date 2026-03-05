@@ -17,15 +17,19 @@ class CallMyMaybe:
 
         with open('input/functions_definition.json') as file:
             self.funcs = {e['fn_name']: e for e in json.load(file)}
-        for func in self.funcs.values():
-            func.pop('fn_name', None)
-            func.pop('return_type', None)
-
-        self.instruction = self.encode("You need to convert question to " +
-            "JSON question following its structure "+
-            f"Allowed functions: {self.funcs.keys()}")
         
-    def apply_mask(self, allowed_ids: list[int], logits):
+        # INSTRUCTION
+        self.instruction = self.encode("Convert question to " +
+            "JSON question following its structure. " +
+            f"Allowed functions:\n\n")
+        for name, data in self.funcs.items():
+            types = ''
+            for t in data['args_types'].values():
+                types += t + ', '
+            self.instruction += self.encode(f"- {name} \n   " +
+                                            f"argument types: {types}\n\n")
+
+    def apply_mask(self, allowed_ids: list[int], logits) -> list[int]:
         """Applies mask by setting all forbidden token scores to -infinity"""
         masked = np.full_like(logits, -float('inf'))
         for id in allowed_ids:
@@ -44,72 +48,90 @@ class CallMyMaybe:
                 if substr in self.word_ids:
                     match_id = self.word_ids[substr]
                     match_len = len(substr)
-            
+
             if match_id is not None:
                 ids.append(match_id)
                 text = text[match_len:]
             else:
                 text = text[-1:]
         return ids
-    
-    def decode(self, tokens: List[int]):
+
+    def all_tokens(self, text: str) -> list[int]:
+        """Returns all tokens whose decoded form appears in text"""
+        ids = set()
+
+        for token_id in range(len(self.vocab)):
+            decoded = self.decode([token_id])
+
+            if decoded in text:
+                ids.add(token_id)
+
+        return list(ids)
+
+    def decode(self, tokens: List[int]) -> str:
         """Translates tokens to text"""
         result = ""
         for token in tokens:
             result += self.vocab[token]
         return result.replace('Ġ', ' ').replace('Ċ', '\n').replace('ĉ', '\t')
-    
-    def get_logits(self, prompt_ids: list[int], mask = None):
+
+    def get_logits(self, prompt_ids: list[int], mask = None) -> list[int]:
         """Returns logits for current ids. Adds mask optionally"""
         l = self.llm.get_logits_from_input_ids(self.instruction + prompt_ids)
         if mask is not None:
             l = self.apply_mask(mask, l)
         return l
 
-    def get_func(self, prompt_ids: list[int]):
-        """Used to choose between operations and return tokens of chosen"""
+    def get_func(self, prompt_ids: list[int]) -> list[int]:
+        """Returns tokens of function that should be used"""
         funcs = [self.encode(k) for k in self.funcs.keys()]
         result = []
+        
         while funcs:
             step = {f[0] for f in funcs}
-            logits = self.get_logits(prompt_ids, step)
+            logits = self.get_logits(prompt_ids + result, list(step))
             next_token = int(np.argmax(logits))
             result.append(next_token)
             funcs = [f[1:] for f in funcs if f[0] == next_token and len(f) > 1]
         return result
 
-    def add_args(self, func: dict, prompt_ids: list[int]):
-        """Used to add line with arguments"""
+    def add_args(self, func, prompt_ids, text) -> list[int]:
         prompt_ids += self.encode('\n\t\t"arguments": {')
+        text = text.replace(' ', 'Ġ')#.replace('\n', 'Ċ').replace('\t', 'ĉ')
+        allowed = {
+            a for a in self.all_tokens(text + '"},0.')
+            if a == self.encode('"')[0] or '"' not in self.decode([a])
+        }
+
         for i, arg in enumerate(func['args_names']):
-            if i != 0:
+            if i > 0:
                 prompt_ids += self.encode(', ')
+
             prompt_ids += self.encode(f'"{arg}": ')
+
             is_str = func['args_types'][arg] == 'str'
             if is_str:
                 prompt_ids += self.encode('"')
-            flag = True 
-            while flag:
-                logits = self.get_logits(prompt_ids)
-                next_id = int(np.argmax(logits))
-                n = self.decode([next_id])
+
+            while True:
+                logits = self.get_logits(prompt_ids, allowed)
+                best = self.decode([int(np.argmax(logits))])
                 
-                if is_str:
-                    if '"' in n:
-                        n = n[:n.find('"') + 1]
-                        flag = False
-                    prompt_ids += self.encode(n)
-                else:
-                    if any(c in n for c in [',', '}', '\n']):
-                        flag = False
-                    else:
-                        prompt_ids.append(next_id)
+                if ',' in best or '}' in best:
+                    break
+
+                prompt_ids += self.encode(best)
+                print(self.decode(prompt_ids))
+
+                if is_str and '"' in best and '\\"' not in best:
+                    break
+                
         prompt_ids += self.encode('}\n')
         return prompt_ids
 
-    def process_func(self, prompt: str):
+    def process_func(self, prompt: str) -> str:
         """Process single operation"""
-        prompt = prompt.replace('\n', '\\n')
+        prompt = prompt.replace('\n', '\\n').replace('\t', '\\t').replace('\"', '\\"')
         prompt_ids = self.encode('\t{\n\t\t"prompt": "' + prompt + '",\n')
 
         prompt_ids += self.encode('\t\t"function": "')
@@ -117,7 +139,7 @@ class CallMyMaybe:
         prompt_ids += func
         prompt_ids += self.encode('",')
 
-        prompt_ids = self.add_args(self.funcs[self.decode(func)], prompt_ids)
+        prompt_ids = self.add_args(self.funcs[self.decode(func)], prompt_ids, prompt)
 
         prompt_ids += self.encode('\t}')
 
@@ -126,16 +148,18 @@ class CallMyMaybe:
 
 if __name__ == "__main__":
     cmm = CallMyMaybe()
+    print(cmm.word_ids)
     prompts = None
     with open('input/function_calling_tests.json') as requests:
         prompts = [t['prompt'] for t in json.load(requests)]
     output = open('output/function_calling_results.json', 'w')
     output.write('[\n')
     for i, p in enumerate(prompts):
+        print(f'{i}. Processing \'{p}\'...')
         if i < len(prompts) - 1:
             output.write(cmm.process_func(p) + ',\n')
         else:
             output.write(cmm.process_func(p) + '\n')
     output.write(']')
     output.close()
-        
+  
