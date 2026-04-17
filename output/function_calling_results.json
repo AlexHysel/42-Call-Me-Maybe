@@ -5,9 +5,9 @@
 		"arguments": {"a": 16}
 	},
 	{
-		"prompt": "Reverse the string '\"hello\n}'\n}",
+		"prompt": "Reverse the string 'hello'",
 		"function": "fn_reverse_string",
-		"arguments": {"s": "hello\n"}
+		"arguments": {"s": "hello"}
 	},
 	{
 		"prompt": "Reverse the string 'world'",
@@ -17,17 +17,17 @@
 	{
 		"prompt": "Substitute the digits in the string 'Hello 34 I'm 233 years old' with 'NUMBERS'",
 		"function": "fn_substitute_string_with_regex",
-		"arguments": {"source_string": "Hello, "regex": "34I'm, "replacement": "NUMBERS"}
+		"arguments": {"source_string": "Hello 34 I'm 233 years old", "regex": "([a-zA-Z]+)([+-]?\d+)?(years|age)$|^$|[A-Za-z]+$?\\s[A-zaZ]?[^ ]* $ [^ ][^\n]*\w+$ ? (Years | Age) 23 years old in the string", "replacement": "NUMBERS"}
 	},
 	{
 		"prompt": "Replace all vowels in 'Programming is fun' with asterisks",
 		"function": "fn_substitute_string_with_regex",
-		"arguments": {"source_string": "Programmingisfun", "regex": "a", "replacement": "asterisk"}
+		"arguments": {"source_string": "Programming is fun", "regex": "([aeiouAEIOU])$|(?i)\\w+? ( [^a-zA-Z]* ) | ([A-Za-z]+)? (?[^\d]*) $|^s|[eE]o|iI][\daFf]? + ?(?)  * - \", "replacement": "asterisk"}
 	},
 	{
 		"prompt": "Substitute the word 'cat' with 'dog' in 'The cat sat on the mat with another cat'",
 		"function": "fn_substitute_string_with_regex",
-		"arguments": {"source_string": "Thecatsatonthematwithanothercat", "regex": "cat", "replacement": "dog"}
+		"arguments": {"source_string": "The cat sat on the mat with another cats", "regex": "cat|cats$|^([a-zA-Z]+) + ([^ ]+)$\\s* (other cats)? $  ^[A-Za-z]+$ | [^\d+] * ?(another cat)|([^ \n\r\t])\r\n?(\w+) (\S+)\b", "replacement": "dog"}
 	},
 	{
 		"prompt": "What is the sum of 2 and 3?",
@@ -62,7 +62,7 @@
 	{
 		"prompt": "Greet shrek",
 		"function": "fn_greet",
-		"arguments": {"name": "shrek"}
+		"arguments": {"name": "str"}
 	},
 	{
 		"prompt": "Greet john",
