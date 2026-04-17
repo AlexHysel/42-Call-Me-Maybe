@@ -6,32 +6,36 @@ import numpy as np
 class CallMeMaybe:
     def __init__(self) -> None:
         self.llm = Small_LLM_Model()
-        path = self.llm.get_path_to_vocabulary_json()
-        with open(path, 'r', encoding='utf-8') as f:
+
+        with open(self.llm.get_path_to_vocabulary_json(), 'r', encoding='utf-8') as f:
             self.word_ids = json.load(f)
+
         self.vocab = [None] * len(self.word_ids)
-        for k, v in self.word_ids.items():
-            self.vocab[v] = k
+        for word, token in self.word_ids.items():
+            self.vocab[token] = word
+
         with open('input/functions_definition.json') as file:
-            self.funcs = {e['fn_name']: e for e in json.load(file)}
+            self.func_definitions = {e['fn_name']: e for e in json.load(file)}
+    
         self.instruction = self.encode("Convert question to " +
             "JSON question following its structure. " +
             f"Allowed functions:\n\n")
-        for name, data in self.funcs.items():
+        
+        for name, data in self.func_definitions.items():
             types = ''
             for t in data['args_types'].values():
                 types += t + ', '
-            self.instruction += self.encode(f"- {name} \n   " +
+            self.instruction += self.encode(f"- {name} \n\t" +
                                             f"argument types: {types}\n\n")
             
-    def special_to_standart(text):
+    def special_to_standart(text: str) -> str:
         """
         Replaces special AI characters for space, tab and new line with
         standart human ones
         """
         return text.replace('Ġ', ' ').replace('Ċ', '\n').replace('ĉ', '\t')
     
-    def standart_to_special(text):
+    def standart_to_special(text: str) -> str:
         """
         Replaces standart spaces, tabs and new line chars with special ones
         AI can understand
@@ -70,8 +74,9 @@ class CallMeMaybe:
         return ids
 
     def all_tokens(self, text: str, allowed_chars: str = "") -> list[int]:
-        ids = set()
+        """Returns the list of all possible tokens from the string"""
 
+        ids = set()
         char_set = set(text) | set(allowed_chars)
         
         for token_id in range(len(self.vocab)):
@@ -90,7 +95,10 @@ class CallMeMaybe:
         return self.special_to_standart(result)
 
     def get_logits(self, prompt_ids: list[int], mask = None) -> list[int]:
-        """Returns the list logits for provided ids. Applies the mask optionally"""
+        """
+        Returns the list of logits for provided ids. 
+        Applies the mask optionally
+        """
 
         l = self.llm.get_logits_from_input_ids(self.instruction + prompt_ids)
         if mask is not None:
@@ -99,7 +107,7 @@ class CallMeMaybe:
 
     def get_func(self, prompt_ids: list[int]) -> list[int]:
         """Returns tokens of function that should be used"""
-        
+
         funcs = [self.encode(k) for k in self.funcs.keys()]
         result = []
         
@@ -114,14 +122,11 @@ class CallMeMaybe:
     def add_args(self, func, prompt_ids, text) -> list[int]:
         prompt_ids += self.encode('\n\t\t"arguments": {')
         
-        # 1. Токены, которые есть ТОЛЬКО в вопросе пользователя
         prompt_content_ids = set(self.all_tokens(text))
         
-        # 2. Базовые символы JSON структуры (всегда разрешены)
         json_struct_ids = set(self.all_tokens(' {},0.123456789"'))
         
-        # 3. Полный алфавит и спецсимволы (только для регулярок)
-        regex_chars = ' \\[]+*-^$|?_\\d()a-zABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        regex_chars = ' \\d[]+*-^$|?_()a-zABCDEFGHIJKLMNOPQRSTUVWXYZ'
         regex_ids = set(self.all_tokens(text + regex_chars))
 
         for i, arg in enumerate(func['args_names']):
