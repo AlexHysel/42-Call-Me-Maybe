@@ -17,17 +17,17 @@
 	{
 		"prompt": "Substitute the digits in the string 'Hello 34 I'm 233 years old' with 'NUMBERS'",
 		"function": "fn_substitute_string_with_regex",
-		"arguments": {"source_string": "Hello 34 I'm 233 years old", "regex": "([a-zA-Z]+)([+-]?\d+)?(years|age)$|^$|[A-Za-z]+$?\\s[A-zaZ]?[^ ]* $ [^ ][^\n]*\w+$ ? (Years | Age) 23 years old in the string", "replacement": "NUMBERS"}
+		"arguments": {"source_string": "Hello 34 I'm 233 years old", "regex": "34 233 years old", "replacement": "NUMBERS"}
 	},
 	{
 		"prompt": "Replace all vowels in 'Programming is fun' with asterisks",
 		"function": "fn_substitute_string_with_regex",
-		"arguments": {"source_string": "Programming is fun", "regex": "([aeiouAEIOU])$|(?i)\\w+? ( [^a-zA-Z]* ) | ([A-Za-z]+)? (?[^\d]*) $|^s|[eE]o|iI][\daFf]? + ?(?)  * - \", "replacement": "asterisk"}
+		"arguments": {"source_string": "Programming is fun", "regex": "a|e|i o u", "replacement": "asterisk"}
 	},
 	{
 		"prompt": "Substitute the word 'cat' with 'dog' in 'The cat sat on the mat with another cat'",
 		"function": "fn_substitute_string_with_regex",
-		"arguments": {"source_string": "The cat sat on the mat with another cats", "regex": "cat|cats$|^([a-zA-Z]+) + ([^ ]+)$\\s* (other cats)? $  ^[A-Za-z]+$ | [^\d+] * ?(another cat)|([^ \n\r\t])\r\n?(\w+) (\S+)\b", "replacement": "dog"}
+		"arguments": {"source_string": "The cat sat on the mat with another cats", "regex": "cat", "replacement": "dog"}
 	},
 	{
 		"prompt": "What is the sum of 2 and 3?",
