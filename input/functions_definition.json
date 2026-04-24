@@ -1,80 +1,71 @@
 [
   {
-    "fn_name": "fn_add_numbers",
-    "args_names": [
-      "a",
-      "b"
-    ],
-    "args_types": {
-      "a": "float",
-      "b": "float"
+    "name": "fn_add_numbers",
+    "description": "Add two numbers together and return their sum.",
+    "parameters": {
+      "a": {
+        "type": "number"
+      },
+      "b": {
+        "type": "number"
+      }
     },
-    "return_type": "float"
+    "returns": {
+      "type": "number"
+    }
   },
   {
-    "fn_name": "fn_get_square_root",
-    "args_names": [
-      "a"
-    ],
-    "args_types": {
-      "a": "float"
+    "name": "fn_greet",
+    "description": "Generate a greeting message for a person by name.",
+    "parameters": {
+      "name": {
+        "type": "string"
+      }
     },
-    "return_type": "float"
+    "returns": {
+      "type": "string"
+    }
   },
   {
-    "fn_name": "fn_greet",
-    "args_names": [
-      "name"
-    ],
-    "args_types": {
-      "name": "str"
+    "name": "fn_reverse_string",
+    "description": "Reverse a string and return the reversed result.",
+    "parameters": {
+      "s": {
+        "type": "string"
+      }
     },
-    "return_type": "str"
+    "returns": {
+      "type": "string"
+    }
   },
   {
-    "fn_name": "fn_is_even",
-    "args_names": [
-      "n"
-    ],
-    "args_types": {
-      "n": "int"
+    "name": "fn_get_square_root",
+    "description": "Calculate the square root of a number.",
+    "parameters": {
+      "a": {
+        "type": "number"
+      }
     },
-    "return_type": "bool"
+    "returns": {
+      "type": "number"
+    }
   },
   {
-    "fn_name": "fn_multiply_numbers",
-    "args_names": [
-      "a",
-      "b"
-    ],
-    "args_types": {
-      "a": "float",
-      "b": "float"
+    "name": "fn_substitute_string_with_regex",
+    "description": "Replace all occurrences matching a regex pattern in a string.",
+    "parameters": {
+      "source_string": {
+        "type": "string"
+      },
+      "regex": {
+        "type": "string"
+      },
+      "replacement": {
+        "type": "string"
+      }
     },
-    "return_type": "float"
-  },
-  {
-    "fn_name": "fn_reverse_string",
-    "args_names": [
-      "s"
-    ],
-    "args_types": {
-      "s": "str"
-    },
-    "return_type": "str"
-  },
-  {
-    "fn_name": "fn_substitute_string_with_regex",
-    "args_names": [
-      "source_string",
-      "regex",
-      "replacement"
-    ],
-    "args_types": {
-      "source_string": "str",
-      "regex": "str",
-      "replacement": "str"
-    },
-    "return_type": "str"
+    "returns": {
+      "type": "string"
+    }
   }
 ]

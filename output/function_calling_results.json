@@ -1,8 +1,23 @@
 [
 	{
-		"prompt": "What is the square root of 16?",
-		"function": "fn_get_square_root",
-		"arguments": {"a": 16.0}
+		"prompt": "What is the sum of 2 and 3?",
+		"function": "fn_add_numbers",
+		"arguments": {"a": 2, "b": 3}
+	},
+	{
+		"prompt": "What is the sum of 265 and 345?",
+		"function": "fn_add_numbers",
+		"arguments": {"a": 265, "b": 345}
+	},
+	{
+		"prompt": "Greet shrek",
+		"function": "fn_greet",
+		"arguments": {"name": "t"}
+	},
+	{
+		"prompt": "Greet john",
+		"function": "fn_greet",
+		"arguments": {"name": "john"}
 	},
 	{
 		"prompt": "Reverse the string 'hello'",
@@ -15,58 +30,28 @@
 		"arguments": {"s": "world"}
 	},
 	{
-		"prompt": "Substitute the digits in the string 'Hello 34 I'm 233 years old' with 'NUMBERS'",
+		"prompt": "What is the square root of 16?",
+		"function": "fn_get_square_root",
+		"arguments": {"a": 16}
+	},
+	{
+		"prompt": "Calculate the square root of 144",
+		"function": "fn_get_square_root",
+		"arguments": {"a": 144}
+	},
+	{
+		"prompt": "Replace all numbers in \"Hello 34 I'm 233 years old\" with NUMBERS",
 		"function": "fn_substitute_string_with_regex",
-		"arguments": {"source_string": "Hello 34 I m years old", "regex": "34|20|$\\d+|^$?([+-]?\-?)\$$, 9 digits with the string in old", "replacement": "NUMBERS"}
+		"arguments": {"source_string": "Hello 34 I'm 233 years old", "regex": "34|233", "replacement": "NUMBER"}
 	},
 	{
 		"prompt": "Replace all vowels in 'Programming is fun' with asterisks",
 		"function": "fn_substitute_string_with_regex",
-		"arguments": {"source_string": "Programming is fun", "regex": "([aeiouAEIOU])|([^a-zA-Z0-9_]+)\\s+?|[A-Za-z][^eI]", "replacement": "*  asterisks"}
+		"arguments": {"source_string": "Programming is fun", "regex": "a|e|i[o]|o[u]", "replacement": "*asterisks"}
 	},
 	{
 		"prompt": "Substitute the word 'cat' with 'dog' in 'The cat sat on the mat with another cat'",
 		"function": "fn_substitute_string_with_regex",
-		"arguments": {"source_string": "The cat sat on the mat with another dog", "regex": "cat|dog", "replacement": "dog"}
-	},
-	{
-		"prompt": "What is the sum of 2 and 3?",
-		"function": "fn_add_numbers",
-		"arguments": {"a": 2.0, "b": 3.0}
-	},
-	{
-		"prompt": "What is the sum of 265 and 345?",
-		"function": "fn_add_numbers",
-		"arguments": {"a": 265, "b": 345}
-	},
-	{
-		"prompt": "Is 4 an even number?",
-		"function": "fn_is_even",
-		"arguments": {"n": 4}
-	},
-	{
-		"prompt": "Is 7 an even number?",
-		"function": "fn_is_even",
-		"arguments": {"n": 7}
-	},
-	{
-		"prompt": "What is the product of 3 and 5?",
-		"function": "fn_multiply_numbers",
-		"arguments": {"a": 3.0, "b": 5.0}
-	},
-	{
-		"prompt": "What is the product of twelve and 4?",
-		"function": "fn_multiply_numbers",
-		"arguments": {"a": 12.0, "b": 4.0}
-	},
-	{
-		"prompt": "Greet shrek",
-		"function": "fn_greet",
-		"arguments": {"name": "Greet shr"}
-	},
-	{
-		"prompt": "Greet john",
-		"function": "fn_greet",
-		"arguments": {"name": "john"}
+		"arguments": {"source_string": "The cat sat on the mat with another cat,  The dog sat on the mat with another dog", "regex": "cat|dog", "replacement": "dog"}
 	}
 ]

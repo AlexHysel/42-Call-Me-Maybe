@@ -1,8 +1,7 @@
 from src.llm_sdk import Small_LLM_Model
 import json
 import numpy as np
-import re
-
+from utils import special_to_standart, standart_to_special, escape
 
 class CallMeMaybe:
     def __init__(self) -> None:
@@ -19,53 +18,37 @@ class CallMeMaybe:
         with open(vocab_path, 'r', encoding='utf-8') as f:
             self.tokens = json.load(f)
 
-        self.t_instruction = self.encode("Convert question to " +
-            "JSON question following its structure. " +
-            f"Allowed functions:\n\n")
+        self.t_instruction = self.encode(
+            "Extract function call from user request. " +
+            "Fill arguments with exact values from the request.")
         self.t_full_instruction = self.t_instruction + self.encode('\nAllowed functions:')
 
         with open(definitions_path) as file:
             for func in json.load(file):
                 data = dict()
-                data['t_name'] = self.encode(func['fn_name'])
-                data['args_names'] = func['args_names']
-                data['args_types'] = {k: self.encode(v) for k, v in func['args_types'].items()}
-                self.functions[func['fn_name']] = data
-                self.t_full_instruction += self.encode('\n' + func['fn_name'])
+                data['name'] = self.encode(func['name'])
+                data['description'] = self.encode(func['description'])
+                data['args_names'] = list(func['parameters'].keys())
+                data['args_types'] = {
+                    k: self.encode(v['type'])
+                    for k, v in func['parameters'].items()
+                }
+                self.functions[func['name']] = data
+                self.t_full_instruction += self.encode('\n' + func['name'])
 
         self.vocab = [None] * len(self.tokens)
         for word, token in self.tokens.items():
             self.vocab[token] = word
         
         self.number_ids = self.encode_all('}, .0123456789"')
-        self.regex_ids = self.encode_all('"\\d+[]*-^$|?_()a-zA-Z0-9[aeiou][AEIOU][aeiouAEIOU]')
-
-    @staticmethod
-    def special_to_standart(text: str) -> str:
-        """
-        Replaces special AI characters for space, tab and new line with
-        standart human ones
-        """
-        return text.replace('Ġ', ' ').replace('Ċ', '\n').replace('ĉ', '\t')
-    
-    @staticmethod
-    def standart_to_special(text: str) -> str:
-        """
-        Replaces standart spaces, tabs and new line chars with special ones
-        AI can understand
-        """
-        return text.replace(' ', 'Ġ').replace('\n', 'Ċ').replace('\t', 'ĉ')
-
-    @staticmethod
-    def escape(text: str) -> str:
-        return text.replace('\\', '\\\\').replace('"', '\\"')
+        self.regex_ids = self.encode_all('"\\\\d+[]*-^$|?_()a-zA-Z0-9[aeiou][AEIOU][aeiouAEIOU]')
 
     # === ENCODING and DECODING ===
 
     def encode(self, text: str) -> list[int]:
         """Translates human text to a list of tokens for LLM"""
 
-        text = CallMeMaybe.standart_to_special(text)
+        text = standart_to_special(text)
         ids = []
         while text:
             match_id = None
@@ -84,9 +67,13 @@ class CallMeMaybe:
         return ids
     
     def encode_words(self, text: str) -> set[int]:
-        words = re.findall(r'\b\w+\b', text)
+        """Returns all possible tokens from the string"""
         ids = set()
+        words = text.split()
         for word in words:
+            word = word.strip("'\".,!?")
+            if not word:
+                continue
             for token_id in self.encode(word):
                 ids.add(token_id)
             for token_id in self.encode(' ' + word):
@@ -108,7 +95,7 @@ class CallMeMaybe:
         result = ""
         for token in tokens:
             result += self.vocab[token]
-        return CallMeMaybe.special_to_standart(result)
+        return special_to_standart(result)
 
     # === LLM and Constrained Decoding ===
 
@@ -136,15 +123,13 @@ class CallMeMaybe:
     def define_function(self, prompt_ids: list[int]) -> dict:
         """Returns the function that should be used"""
 
-        # candidates: list of (remaining_token_ids, full_fn_name)
         candidates = [
-            (data['t_name'], fn_name)
-            for fn_name, data in self.functions.items()
+            (data['name'], name)
+            for name, data in self.functions.items()
         ]
         result = []
 
         while candidates:
-            # valid next tokens = first token of each remaining candidate
             allowed = {tokens[0] for tokens, _ in candidates}
             logits = self.get_logits(
                 prompt_ids + result,
@@ -161,10 +146,47 @@ class CallMeMaybe:
 
         return self.functions[self.decode(result)]
 
+    def get_arg(self, arg_type: str, definition: list[int], prompt_ids, allowed_ids: set[int]) -> list[int]:
+        generated_arg_tokens = set()
+        arg = []
+
+        for i in range(60):
+            logits = self.get_logits(prompt_ids + arg, self.t_instruction + definition, allowed_ids)
+            
+            for token_id in set(generated_arg_tokens):
+                logits[token_id] -= 5.0
+
+            best_token = max(logits) - i
+            print(best_token)
+
+            probs = np.exp(logits - np.max(logits))
+            probs /= probs.sum()
+            if np.max(probs) < 0.4:
+                break
+            
+            best_id = int(np.argmax(logits))
+            best_text = self.decode([best_id])
+            
+            if arg_type == 'string':
+                if '"' in best_text and '\\"' not in best_text:
+                    break
+            else:
+                if ',' in best_text or '}' in best_text:
+                    break
+            
+            arg.append(best_id)
+            generated_arg_tokens.add(best_id)
+
+        if arg_type == 'string':
+            arg += [self.tokens['"']]
+        return arg
+
     def add_args(self, function, prompt_ids: list[int], text: str) -> list[int]:
         prompt_ids += self.encode('\n\t\t"arguments": {')
 
-        definition = function['t_name'] + self.encode(': ')
+        definition = function['name'] + self.encode(': ')
+        definition += function['description']
+        definition += self.encode('\nParameters:\n')
         for arg_name in function['args_names']:
             definition += self.encode(f'\n{arg_name}: ')
             definition += function['args_types'][arg_name]
@@ -175,7 +197,7 @@ class CallMeMaybe:
             if i > 0: prompt_ids += self.encode(', ')
             prompt_ids += self.encode(f'"{arg_name}": ')
             
-            if arg_type == 'str':
+            if arg_type == 'string':
                 allowed_ids = self.encode_words(text)
                 for char in '"Ġ,*':
                     allowed_ids.update(set(self.encode(char)))
@@ -184,29 +206,7 @@ class CallMeMaybe:
                 prompt_ids += self.encode('"')
             else:
                 allowed_ids = self.number_ids
-                
-            generated_arg_tokens = []
-            for _ in range(60):
-                logits = self.get_logits(prompt_ids, self.t_instruction + definition, allowed_ids)
-                
-                for token_id in set(generated_arg_tokens):
-                    logits[token_id] -= 15.0
-                
-                best_id = int(np.argmax(logits))
-                best_text = self.decode([best_id])
-                
-                if arg_type == 'str':
-                    if '"' in best_text and '\\"' not in best_text:
-                        break
-                else:
-                    if ',' in best_text or '}' in best_text:
-                        break
-                
-                prompt_ids.append(best_id)
-                generated_arg_tokens.append(best_id)
-    
-            if arg_type == 'str':
-                prompt_ids += self.encode('"')
+            prompt_ids += self.get_arg(arg_type, definition, prompt_ids, allowed_ids)
 
         prompt_ids += self.encode('}\n')
         return prompt_ids
@@ -214,11 +214,11 @@ class CallMeMaybe:
     def process_func(self, prompt: str) -> str:
         """Process single function"""
 
-        prompt = self.escape(prompt)
+        prompt = escape(prompt)
         text = '\t{\n\t\t"prompt": "' + prompt + '",\n\t\t"function": "'
         t_result = self.encode(text)
         function = self.define_function(t_result)
-        t_result += function['t_name']
+        t_result += function['name']
         t_result += self.encode('",')
         t_result = self.add_args(function, t_result, prompt)
         t_result += (self.encode('\t}'))
