@@ -1,0 +1,7 @@
+Regex rules:
+numbers=\\d+
+letters=[a-zA-Z]+
+vowels=[aeiouAEIOU]
+word boundary=\\b<word>\\b
+spaces=\\s+
+any char=.+
