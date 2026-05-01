@@ -1,18 +1,20 @@
-from src.llm_sdk import get_path_to_vocabulary_json
+from src.llm_sdk import Small_LLM_Model
 from src.encoder import Encoder
 from src.llm import LLM
 from src.callmemaybe import CallMeMaybe
 import json
 
+
 def create_encoder(vocab_path) -> Encoder:
     with open(vocab_path, 'r', encoding='utf-8') as f:
         tokens = json.load(f)
+    print(tokens)
     return Encoder(tokens)
 
-
 if __name__ == "__main__":
-    encoder = create_encoder(get_path_to_vocabulary_json())
-    llm = LLM(encoder)
+    llm_model = Small_LLM_Model()
+    encoder = create_encoder(llm_model.get_path_to_vocabulary_json())
+    llm = LLM(llm_model, encoder)
     cmm = CallMeMaybe(llm)
 
     prompts = None

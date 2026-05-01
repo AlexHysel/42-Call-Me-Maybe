@@ -4,12 +4,14 @@ from src.utils import special_to_standart, standart_to_special, escape
 
 class Encoder(BaseModel):
     token_of: dict[str, int]
-    vocab: list[int]
+    vocab: list[str]
 
     def __init__(self, tokens: dict[str, int]):
-        self.vocab = [None] * len(tokens)
+        vocab = [None] * len(tokens)
         for word, token in tokens.items():
-            self.vocab[token] = word
+            vocab[token] = word
+
+        super().__init__(token_of = tokens, vocab = vocab)
 
     def encode(self, text: str) -> list[int]:
         """Translates human text to a list of tokens for LLM"""
@@ -60,7 +62,7 @@ class Encoder(BaseModel):
     def decode(self, tokens: list[int] | int) -> str:
         """Translates LLM tokens to human-readable text"""
         
-        if tokens is int:
+        if isinstance(tokens, int):
             return self.vocab[token]
         result = ""
         for token in tokens:

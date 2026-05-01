@@ -1,7 +1,7 @@
 Regex rules:
-numbers=\\d+
-letters=[a-zA-Z]+
-vowels=[aeiouAEIOU]
-word boundary=\\b<word>\\b
-spaces=\\s+
-any char=.+
+numbers is \\d+
+letters is [a-zA-Z]+
+vowels is [aeiouAEIOU]
+word boundary is \\b<word>\\b
+spaces is \\s+
+any char is .+
