@@ -21,7 +21,6 @@ class LLM(BaseModel):
         
         best_token = int(np.argmax(logits))
 
-        
         return best_token
 
     def set_instruction(self, new: list[int] | str) -> None:
