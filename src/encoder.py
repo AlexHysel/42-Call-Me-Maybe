@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from src.utils import special_to_standart, standart_to_special, escape
+from src.utils import special_to_standart, standart_to_special
 
 
 class Encoder(BaseModel):
@@ -11,7 +11,7 @@ class Encoder(BaseModel):
         for word, token in tokens.items():
             vocab[token] = word
 
-        super().__init__(token_of = tokens, vocab = vocab)
+        super().__init__(token_of=tokens, vocab=vocab)
 
     def encode(self, text: str) -> list[int]:
         """Translates human text to a list of tokens for LLM"""
@@ -33,7 +33,7 @@ class Encoder(BaseModel):
                 text = text[1:]
 
         return ids
-    
+
     def encode_words(self, text: str) -> set[int]:
         """Returns all possible tokens from the string"""
 
@@ -61,9 +61,9 @@ class Encoder(BaseModel):
 
     def decode(self, tokens: list[int] | int) -> str:
         """Translates LLM tokens to human-readable text"""
-        
+
         if isinstance(tokens, int):
-            return self.vocab[token]
+            return self.vocab[tokens]
         result = ""
         for token in tokens:
             result += self.vocab[token]
