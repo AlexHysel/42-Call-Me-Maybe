@@ -52,11 +52,12 @@ class Encoder(BaseModel):
     def encode_all(self, text: str) -> set[int]:
         """Returns all possible tokens from the string"""
 
-        char_set = set(text)
+        c_set = set(text)
         ids = set()
         for token_id in range(len(self.vocab)):
-            if self.vocab[token_id] and all(c in char_set for c in self.vocab[token_id]):
-                ids.add(token_id)
+            if self.vocab[token_id]:
+                if all(c in c_set for c in self.vocab[token_id]):
+                    ids.add(token_id)
         return ids
 
     def decode(self, tokens: list[int] | int) -> str:

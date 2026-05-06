@@ -11,17 +11,17 @@ from src.utils import escape
 
 
 REGEX_MAPPING = [
-    (['vowel', 'vowels'],                      r'[aeiouAEIOU]'),
-    (['consonant', 'consonants'],              r'[bcdfghjklmnpqrstvwxyzBCDFGHJKLMNPQRSTVWXYZ]'),
+    (['vowel', 'vowels'], r'[aeiouAEIOU]'),
+    (['consonant', 'consonants'], r'[bcdfghjklmnpqrstvwxyzBCDFGHJKLMNPQRSTVWXYZ]'),
     (['digit', 'digits', 'number', 'numbers'], r'\\d+'),
-    (['uppercase', 'upper', 'capital'],        r'[A-Z]+'),
-    (['lowercase', 'lower'],                   r'[a-z]+'),
-    (['letter', 'letters', 'alphabetic'],      r'[a-zA-Z]+'),
-    (['space', 'spaces', 'whitespace'],        r'\\s+'),
-    (['punctuation', 'special'],               r'[^\w\s]'),
-    (['alphanumeric'],                         r'\\w+'),
-    (['newline', 'newlines'],                  r'\\n+'),
-    (['tab', 'tabs'],                          r'\\t+'),
+    (['uppercase', 'upper', 'capital'], r'[A-Z]+'),
+    (['lowercase', 'lower'], r'[a-z]+'),
+    (['letter', 'letters', 'alphabetic'], r'[a-zA-Z]+'),
+    (['space', 'spaces', 'whitespace'], r'\\s+'),
+    (['punctuation', 'special'], r'[^\w\s]'),
+    (['alphanumeric'], r'\\w+'),
+    (['newline', 'newlines'], r'\\n+'),
+    (['tab', 'tabs'], r'\\t+'),
 ]
 
 
@@ -32,7 +32,6 @@ class CallMeMaybe(BaseModel):
     t_defintions: list[int]
     t_numbers: set[int]
     t_boolean: set[int]
-    t_instruction: list[int]
     t_instruction_prefix: list[int]
     t_instruction_suffix: list[int]
 
@@ -43,9 +42,9 @@ class CallMeMaybe(BaseModel):
         with open('data/input/functions_definition.json', 'r') as f:
             for func in json.load(f):
                 functions[func['name']] = Function(func, encoder)
-        
-        t_defintions = [token for func in functions.values() for token in func.t_definition]
-        
+
+        t_defintions = [t for t in functions.values() for f in t.t_definition]
+
         t_instruction_prefix = encoder.encode(
             '<|im_start|>system\n'
             'You are provided with function signatures '
@@ -70,7 +69,7 @@ class CallMeMaybe(BaseModel):
             t_instruction_prefix=t_instruction_prefix,
             t_instruction_suffix=t_instruction_suffix
         )
-        self.llm.set_tools()
+        self.set_tools()
 
     def set_tools(self, func: Function | None = None) -> None:
         """Updates the LLM context with function definitions."""
@@ -83,18 +82,15 @@ class CallMeMaybe(BaseModel):
         new += self.t_instruction_suffix
         self.llm.set_instruction(new)
 
-    # === Function selection ===
-
     def define_function(self, tokens: list[int]) -> Function:
         """Selects the best matching function using constrained decoding."""
 
-        candidates = [(func.t_name, name) for name, func in self.functions.items()]
+        candidates = [(f.t_name, n) for n, f in self.functions.items()]
         result = []
 
         while candidates:
             if len(candidates) == 1:
                 _, name = candidates[0]
-                self.llm.set_instruction(self.t_instruction)
                 return self.functions[name]
 
             next_token = self.llm.next_token(
@@ -107,11 +103,13 @@ class CallMeMaybe(BaseModel):
                 for t_name, name in candidates
                 if t_name[0] == next_token and len(t_name) > 1
             ]
+
         return self.functions[self.encoder.decode(result)]
 
-    # === Argument generation ===
-
-    def get_arg(self, arg_type: str, prompt_ids: list[int], mask: set[int]) -> list[int]:
+    def get_arg(self,
+                arg_type: str,
+                prompt_ids: list[int],
+                mask: set[int]) -> list[int]:
         """Generates a single argument value using constrained decoding."""
 
         generated = set()
@@ -150,7 +148,6 @@ class CallMeMaybe(BaseModel):
             if words & set(keywords):
                 return self.encoder.encode(pattern)
 
-        # Fallback: literal word in quotes
         match = re.search(r"['\"](\w+)['\"]", text)
         if match:
             return self.encoder.encode(match.group(1))
@@ -179,7 +176,10 @@ class CallMeMaybe(BaseModel):
             definition += function.t_params[arg_name]
         return definition
 
-    def add_args(self, function: Function, tokens: list[int], text: str) -> list[int]:
+    def add_args(self,
+                 function: Function,
+                 tokens: list[int],
+                 text: str) -> list[int]:
         """Generates all arguments for a function call."""
 
         for i, arg_name in enumerate(function.param_names):
@@ -228,7 +228,7 @@ class CallMeMaybe(BaseModel):
         tokens += function.t_name
         tokens += self.encoder.encode('", "arguments": {')
         self.set_tools(function)
-        tokens = self.add_args(function, tokens, prompt)
+        tokens = self.add_args(function, tokens, text)
         tokens += self.encoder.encode('}')
 
         raw = self.encoder.decode(tokens)
@@ -241,4 +241,4 @@ class CallMeMaybe(BaseModel):
             f'\t\t"name": "{data["name"]}",\n'
             f'\t\t"parameters": {json.dumps(data["arguments"])}\n'
             '\t}'
-        ) 
+        )
