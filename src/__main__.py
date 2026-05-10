@@ -3,6 +3,24 @@ from src.encoder import Encoder
 from src.llm import LLM
 from src.callmemaybe import CallMeMaybe
 import json
+import argparse
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--functions_definition',
+        default='data/input/functions_definition.json'
+    )
+    parser.add_argument(
+        '--input',
+        default='data/input/function_calling_tests.json'
+    )
+    parser.add_argument(
+        '--output',
+        default='data/output/function_calling_results.json'
+    )
+    return parser.parse_args()
 
 
 def create_encoder(vocab_path: str) -> Encoder:
@@ -12,15 +30,16 @@ def create_encoder(vocab_path: str) -> Encoder:
 
 
 if __name__ == "__main__":
+    args = parse_args()
     llm_model = Small_LLM_Model()
     encoder = create_encoder(llm_model.get_path_to_vocabulary_json())
     llm = LLM(llm_model, encoder)
-    cmm = CallMeMaybe(llm)
+    cmm = CallMeMaybe(llm, args.functions_definition)
 
     prompts = None
-    with open('data/input/function_calling_tests.json') as requests:
+    with open(args.input) as requests:
         prompts = [t['prompt'] for t in json.load(requests)]
-    output = open('data/output/function_calling_results.json', 'w')
+    output = open(args.output, 'w')
     output.write('[\n')
     for i, p in enumerate(prompts):
         print(f'\n{i}. Processing \'{p}\'...')

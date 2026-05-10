@@ -38,15 +38,15 @@ class CallMeMaybe(BaseModel):
     t_instruction_prefix: list[int]
     t_instruction_suffix: list[int]
 
-    def __init__(self, llm: LLM) -> None:
+    def __init__(self, llm: LLM, func_definitons: str) -> None:
         encoder = llm.encoder
 
         functions = {}
-        with open('data/input/functions_definition.json', 'r') as f:
+        with open(func_definitons, 'r') as f:
             for func in json.load(f):
                 functions[func['name']] = Function(func, encoder)
 
-        t_defintions = [t for t in functions.values() for f in t.t_definition]
+        t_defintions = [token for func in functions.values() for token in func.t_definition]
 
         t_instruction_prefix = encoder.encode(
             '<|im_start|>system\n'
