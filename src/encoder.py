@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from src.utils import special_to_standart, standart_to_special
+import re
 
 
 class Encoder(BaseModel):
@@ -46,6 +47,24 @@ class Encoder(BaseModel):
             for token_id in self.encode(word):
                 ids.add(token_id)
             ids.add(self.encode(' ' + word)[0])
+        return ids
+
+    def encode_words_separated(self, text: str) -> list[list[int]]:
+        """Returns tokenized prompt fragments."""
+        ids = []
+        unescaped = text.replace('\\"', '"')
+        pattern = r'''
+            "(?:\\.|[^"])*"   |
+            '(?:\\.|[^'])*'   |
+            \S+
+        '''
+        parts = re.findall(pattern, unescaped, re.VERBOSE)
+        for part in parts:
+            part = part.strip("'\".,!?:;\\")
+            if not part:
+                continue
+            ids.append(self.encode(part))
+            ids.append(self.encode(' ' + part))
         return ids
 
     def encode_all(self, text: str) -> set[int]:

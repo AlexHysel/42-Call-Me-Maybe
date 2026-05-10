@@ -1,7 +1,6 @@
 import json
 import re
 
-import numpy as np
 from pydantic import BaseModel
 
 from src.encoder import Encoder
@@ -33,8 +32,6 @@ class CallMeMaybe(BaseModel):
     encoder: Encoder
     functions: dict[str, Function]
     t_defintions: list[int]
-    t_numbers: set[int]
-    t_boolean: set[int]
     t_instruction_prefix: list[int]
     t_instruction_suffix: list[int]
 
@@ -46,7 +43,7 @@ class CallMeMaybe(BaseModel):
             for func in json.load(f):
                 functions[func['name']] = Function(func, encoder)
 
-        t_defintions = [token for func in functions.values() for token in func.t_definition]
+        t_defintions = [t for f in functions.values() for t in f.t_definition]
 
         t_instruction_prefix = encoder.encode(
             '<|im_start|>system\n'
@@ -62,19 +59,10 @@ class CallMeMaybe(BaseModel):
             '</tool_call>\n'
             '<|im_end|>\n')
 
-        t_numbers_set: set[int] = set()
-        t_numbers = encoder.encode_all('0123456789')
-        for c in '.,}':
-            t_numbers.update(encoder.encode(c))
-        for i in range(100):
-            t_numbers_set.update(encoder.encode(str(i)))
-        
         super().__init__(
             llm=llm,
             encoder=encoder,
             functions=functions,
-            t_numbers=t_numbers,
-            t_boolean=set(encoder.encode('true') + encoder.encode('false')),
             t_defintions=t_defintions,
             t_instruction_prefix=t_instruction_prefix,
             t_instruction_suffix=t_instruction_suffix
@@ -116,37 +104,6 @@ class CallMeMaybe(BaseModel):
 
         return self.functions[self.encoder.decode(result)]
 
-    def get_arg(self,
-                arg_type: str,
-                prompt_ids: list[int],
-                mask: set[int]) -> list[int]:
-        """Generates a single argument value using constrained decoding."""
-
-        generated: set[int] = set()
-        arg: list[int] = []
-
-        for i in range(60):
-            logits_list = self.llm.get_logits(prompt_ids + arg, mask)
-
-            if max(logits_list) - i * 0.5 < 0.4:
-                break
-
-            best_id = int(np.argmax(logits_list))
-            best_text = self.encoder.decode([best_id])
-
-            if arg_type == 'string':
-                if '"' in best_text and '\\"' not in best_text:
-                    break
-            elif ',' in best_text or '}' in best_text:
-                break
-
-            arg.append(best_id)
-            generated.add(best_id)
-
-        if arg_type == 'string':
-            arg += self.encoder.encode('"')
-        return arg
-
     def regex_pattern(self, text: str) -> list[int]:
         """Resolves the regex pattern from prompt keywords."""
 
@@ -160,14 +117,6 @@ class CallMeMaybe(BaseModel):
             return self.encoder.encode(match.group(1))
 
         return self.encoder.encode(r'\w+')
-
-    def build_string_mask(self, text: str) -> set[int]:
-        """Builds the allowed token mask for string arguments."""
-
-        mask = self.encoder.encode_words(text)
-        for char in '"Ġ,*':
-            mask.update(self.encoder.encode(char))
-        return mask
 
     def encode_definition(self, function: Function) -> list[int]:
         """Encodes function definition for LLM context."""
@@ -202,22 +151,23 @@ class CallMeMaybe(BaseModel):
                 tokens += self.encoder.encode('"')
                 continue
 
-            if arg_type == 'string':
-                mask = self.build_string_mask(text)
-                tokens += self.encoder.encode('"')
-            elif arg_type == 'number':
-                mask = self.t_numbers
-            elif arg_type == 'boolean':
-                mask = self.t_boolean
+            if arg_type != 'boolean':
+                options = self.encoder.encode_words_separated(text)
             else:
-                mask = self.t_numbers
+                options = [
+                    self.encoder.encode('true'),
+                    self.encoder.encode('false')
+                    ]
 
-            tokens += self.get_arg(arg_type, tokens, mask)
+            if arg_type == 'string':
+                tokens += self.encoder.encode('"')
+
+            tokens += self.llm.next_option(tokens, options)
+            if arg_type == 'string':
+                tokens += self.encoder.encode('"')
 
         tokens += self.encoder.encode('}\n')
         return tokens
-
-    # === Main entry point ===
 
     def process_func(self, prompt: str) -> str:
         prompt = escape(prompt)
@@ -242,6 +192,7 @@ class CallMeMaybe(BaseModel):
 
         raw = self.encoder.decode(tokens)
         tool_json = raw[raw.find('{"name":'):]
+        print(repr(tool_json))
         data = json.loads(tool_json)
 
         return (

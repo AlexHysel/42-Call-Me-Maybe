@@ -1,5 +1,11 @@
 [
   {
+    "prompt": "Replace all numbers in \"Hello 34 I'm 233 years old\" with NUMBERS"
+  },
+  {
+    "prompt": "Substitute the word 'cat' with 'dog' in 'The cat sat on the mat with another cat'"
+  },
+  {
     "prompt": "What is the sum of 2 and 3?"
   },
   {
@@ -24,12 +30,36 @@
     "prompt": "Calculate the square root of 144"
   },
   {
-    "prompt": "Replace all numbers in \"Hello 34 I'm 233 years old\" with NUMBERS"
-  },
-  {
     "prompt": "Replace all vowels in 'Programming is fun' with asterisks"
   },
   {
-    "prompt": "Substitute the word 'cat' with 'dog' in 'The cat sat on the mat with another cat'"
+    "prompt": "Is 42 an even number?"
+  },
+  {
+    "prompt": "Is 7 an even number?"
+  },
+  {
+    "prompt": "What is the product of 6 and 9?"
+  },
+  {
+    "prompt": "Multiply 12 by 15"
+  },
+  {
+    "prompt": "Substitute digits in 'My phone is 123456' with NUM"
+  },
+  {
+    "prompt": "Replace uppercase letters in 'Hello World' with x"
+  },
+  {
+    "prompt": "Greet alice"
+  },
+  {
+    "prompt": "Say hello to bob"
+  },
+  {
+    "prompt": "Flip the string 'racecar'"
+  },
+  {
+    "prompt": "What is 99.5 plus 0.5?"
   }
 ]

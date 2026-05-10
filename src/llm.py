@@ -24,17 +24,14 @@ class LLM(BaseModel):
         logits = self.get_logits(tokens, mask)
         best_token = int(np.argmax(logits))
         return best_token
-    
+
     def next_option(self,
-                   tokens: list[int],
-                   options: list[list[int]] | list[str]
-                   ) -> list[int]:
+                    tokens: list[int],
+                    options: list[list[int]]
+                    ) -> list[int]:
         """Returns the best allowed option."""
 
-        if isinstance(options, list) and all(isinstance(opt, str) for opt in options):
-            options = [self._encoder.encode(opt) for opt in options]
-
-        result = []
+        result: list[int] = []
         while options:
             next_token = self.next_token(
                 tokens + result,
