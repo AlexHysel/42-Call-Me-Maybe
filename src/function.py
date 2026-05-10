@@ -1,5 +1,6 @@
 from pydantic import BaseModel, PrivateAttr
 import json
+from typing import Any
 
 from src.encoder import Encoder
 
@@ -14,12 +15,12 @@ class Function(BaseModel):
     _t_definition: list[int] = PrivateAttr()
 
     def __init__(self,
-                 function: dict[str, dict[str, str | dict[str, str]]],
+                 function: dict[str, Any],
                  encoder: Encoder):
         super().__init__()
-        self._name = function['name']
+        self._name: str = function['name']
         self._t_name = encoder.encode(self._name)
-        self._description = function.get('description', '')
+        self._description: str = function.get('description', '')
         self._t_description = encoder.encode(self._description)
         self._params = {
             k: v['type']

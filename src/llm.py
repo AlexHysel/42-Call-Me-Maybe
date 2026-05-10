@@ -16,7 +16,9 @@ class LLM(BaseModel):
         self._encoder = encoder
         self._t_instruction = None
 
-    def next_token(self, tokens: list[int], mask: set[int] = None) -> int:
+    def next_token(self,
+                   tokens: list[int],
+                   mask: set[int] | None = None) -> int:
         """Returns the next token for the provided tokens."""
 
         logits = self.get_logits(tokens, mask)
@@ -30,17 +32,22 @@ class LLM(BaseModel):
             new = self._encoder.encode(new)
         self._t_instruction = new
 
-    def get_logits(self, tokens: list[int], mask=None) -> list[int]:
+    def get_logits(self,
+                   tokens: list[int],
+                   mask: set[int] | None = None) -> list[float]:
         """
         Returns the list of logits for provided tokens.
         Applies the mask optionally.
         """
-        lgt = self._llm.get_logits_from_input_ids(self._t_instruction + tokens)
+        instr = self._t_instruction if self._t_instruction is not None else []
+        lgt = self._llm.get_logits_from_input_ids(instr + tokens)
         if mask is not None:
             lgt = self._apply_mask(mask, lgt)
         return lgt
 
-    def _apply_mask(self, allowed_ids: list[int], logits) -> list[int]:
+    def _apply_mask(self,
+                    allowed_ids: set[int] | list[int],
+                    logits: list[float]) -> list[float]:
         """
         Returns logits with mask applied by setting all forbidden
         token scores to -infinity.
@@ -48,7 +55,7 @@ class LLM(BaseModel):
         masked = np.full_like(logits, -float('inf'))
         for id in allowed_ids:
             masked[id] = logits[id]
-        return masked
+        return list(masked)
 
     @property
     def encoder(self) -> Encoder:

@@ -12,7 +12,10 @@ from src.utils import escape
 
 REGEX_MAPPING = [
     (['vowel', 'vowels'], r'[aeiouAEIOU]'),
-    (['consonant', 'consonants'], r'[bcdfghjklmnpqrstvwxyzBCDFGHJKLMNPQRSTVWXYZ]'),
+    (
+        ['consonant', 'consonants'],
+        r'[bcdfghjklmnpqrstvwxyzBCDFGHJKLMNPQRSTVWXYZ]',
+    ),
     (['digit', 'digits', 'number', 'numbers'], r'\\d+'),
     (['uppercase', 'upper', 'capital'], r'[A-Z]+'),
     (['lowercase', 'lower'], r'[a-z]+'),
@@ -86,7 +89,7 @@ class CallMeMaybe(BaseModel):
         """Selects the best matching function using constrained decoding."""
 
         candidates = [(f.t_name, n) for n, f in self.functions.items()]
-        result = []
+        result: list[int] = []
 
         while candidates:
             if len(candidates) == 1:
@@ -112,19 +115,20 @@ class CallMeMaybe(BaseModel):
                 mask: set[int]) -> list[int]:
         """Generates a single argument value using constrained decoding."""
 
-        generated = set()
-        arg = []
+        generated: set[int] = set()
+        arg: list[int] = []
 
         for i in range(60):
             logits = self.llm.get_logits(prompt_ids + arg, mask)
+            logits_list = [
+                l - 5.0 if idx in generated else l
+                for idx, l in enumerate(logits)
+            ]
 
-            for token_id in generated:
-                logits[token_id] -= 5.0
-
-            if max(logits) - i < 0.4:
+            if max(logits_list) - i < 0.4:
                 break
 
-            best_id = int(np.argmax(logits))
+            best_id = int(np.argmax(logits_list))
             best_text = self.encoder.decode([best_id])
 
             if arg_type == 'string':

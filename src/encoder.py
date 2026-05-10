@@ -7,7 +7,7 @@ class Encoder(BaseModel):
     vocab: list[str]
 
     def __init__(self, tokens: dict[str, int]):
-        vocab = [None] * len(tokens)
+        vocab: list[str | None] = [None] * len(tokens)
         for word, token in tokens.items():
             vocab[token] = word
 

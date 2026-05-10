@@ -5,7 +5,7 @@ from src.callmemaybe import CallMeMaybe
 import json
 
 
-def create_encoder(vocab_path) -> Encoder:
+def create_encoder(vocab_path: str) -> Encoder:
     with open(vocab_path, 'r', encoding='utf-8') as f:
         tokens = json.load(f)
     return Encoder(tokens)
