@@ -1,9 +1,9 @@
 [
   {
-    "prompt": "Substitute the word 'cat' with 'dog' in 'The cat sat on the mat with another cat'"
+    "prompt": "What is the sum of 2 and 3?"
   },
   {
-    "prompt": "Replace all numbers in \"Hello 34 I'm 233 years old\" with NUMBERS"
+    "prompt": "What is the sum of 265 and 345?"
   },
   {
     "prompt": "Greet shrek"
@@ -21,54 +21,15 @@
     "prompt": "What is the square root of 16?"
   },
   {
+    "prompt": "Calculate the square root of 144"
+  },
+  {
+    "prompt": "Replace all numbers in \"Hello 34 I'm 233 years old\" with NUMBERS"
+  },
+  {
     "prompt": "Replace all vowels in 'Programming is fun' with asterisks"
   },
   {
-    "prompt": "Add 10.1 and 20.83"
-  },
-  {
-    "prompt": "Say hello to alice"
-  },
-  {
-    "prompt": "Reverse 'python'"
-  },
-  {
-    "prompt": "Replace vowels in 'hello world' with *"
-  },
-  {
-    "prompt": "Change 'apple' to 'orange' in 'I like apple'"
-  },
-  {
-    "prompt": "Sum of 7 and 8"
-  },
-  {
-    "prompt": "Greet bob"
-  },
-  {
-    "prompt": "Reverse string 'test'"
-  },
-  {
-    "prompt": "Sqrt of 49"
-  },
-  {
-    "prompt": "Substitute numbers in 'Year 2023' with YEAR"
-  },
-  {
-    "prompt": "Add 100 and 200"
-  },
-  {
-    "prompt": "Greet charlie"
-  },
-  {
-    "prompt": "Reverse 'javascript'"
-  },
-  {
-    "prompt": "Square root of 81"
-  },
-  {
-    "prompt": "Replace all 'a' with 'b' in 'banana'"
-  },
-  {
-    "prompt": "Sum 50 and 75"
+    "prompt": "Substitute the word 'cat' with 'dog' in 'The cat sat on the mat with another cat'"
   }
 ]

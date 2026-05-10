@@ -45,8 +45,7 @@ class Encoder(BaseModel):
                 continue
             for token_id in self.encode(word):
                 ids.add(token_id)
-            for token_id in self.encode(' ' + word):
-                ids.add(token_id)
+            ids.add(self.encode(' ' + word)[0])
         return ids
 
     def encode_all(self, text: str) -> set[int]:

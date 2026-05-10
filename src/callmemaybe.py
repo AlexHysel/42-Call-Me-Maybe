@@ -62,11 +62,18 @@ class CallMeMaybe(BaseModel):
             '</tool_call>\n'
             '<|im_end|>\n')
 
+        t_numbers_set: set[int] = set()
+        t_numbers = encoder.encode_all('0123456789')
+        for c in '.,}':
+            t_numbers.update(encoder.encode(c))
+        for i in range(100):
+            t_numbers_set.update(encoder.encode(str(i)))
+        
         super().__init__(
             llm=llm,
             encoder=encoder,
             functions=functions,
-            t_numbers=encoder.encode_all('}, .0123456789"'),
+            t_numbers=t_numbers,
             t_boolean=set(encoder.encode('true') + encoder.encode('false')),
             t_defintions=t_defintions,
             t_instruction_prefix=t_instruction_prefix,
@@ -119,13 +126,9 @@ class CallMeMaybe(BaseModel):
         arg: list[int] = []
 
         for i in range(60):
-            logits = self.llm.get_logits(prompt_ids + arg, mask)
-            logits_list = [
-                l - 5.0 if idx in generated else l
-                for idx, l in enumerate(logits)
-            ]
+            logits_list = self.llm.get_logits(prompt_ids + arg, mask)
 
-            if max(logits_list) - i < 0.4:
+            if max(logits_list) - i * 0.5 < 0.4:
                 break
 
             best_id = int(np.argmax(logits_list))
@@ -158,7 +161,7 @@ class CallMeMaybe(BaseModel):
 
         return self.encoder.encode(r'\w+')
 
-    def build_string_mask(self, arg_name: str, text: str) -> set[int]:
+    def build_string_mask(self, text: str) -> set[int]:
         """Builds the allowed token mask for string arguments."""
 
         mask = self.encoder.encode_words(text)
@@ -200,7 +203,7 @@ class CallMeMaybe(BaseModel):
                 continue
 
             if arg_type == 'string':
-                mask = self.build_string_mask(arg_name, text)
+                mask = self.build_string_mask(text)
                 tokens += self.encoder.encode('"')
             elif arg_type == 'number':
                 mask = self.t_numbers
@@ -228,11 +231,13 @@ class CallMeMaybe(BaseModel):
         )
         tokens = self.encoder.encode(text)
         self.set_tools()
-        function = self.define_function(tokens)
+        func_names = [f.t_name for f in self.functions.values()]
+        func_name = self.llm.next_option(tokens, func_names)
+        function = self.functions[self.encoder.decode(func_name)]
         tokens += function.t_name
         tokens += self.encoder.encode('", "arguments": {')
         self.set_tools(function)
-        tokens = self.add_args(function, tokens, text)
+        tokens = self.add_args(function, tokens, prompt)
         tokens += self.encoder.encode('}')
 
         raw = self.encoder.decode(tokens)

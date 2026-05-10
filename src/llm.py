@@ -24,6 +24,29 @@ class LLM(BaseModel):
         logits = self.get_logits(tokens, mask)
         best_token = int(np.argmax(logits))
         return best_token
+    
+    def next_option(self,
+                   tokens: list[int],
+                   options: list[list[int]] | list[str]
+                   ) -> list[int]:
+        """Returns the best allowed option."""
+
+        if isinstance(options, list) and all(isinstance(opt, str) for opt in options):
+            options = [self._encoder.encode(opt) for opt in options]
+
+        result = []
+        while options:
+            next_token = self.next_token(
+                tokens + result,
+                {option[0] for option in options}
+            )
+            result.append(next_token)
+            options = [
+                option[1:]
+                for option in options
+                if option[0] == next_token and len(option) > 1
+            ]
+        return result
 
     def set_instruction(self, new: list[int] | str) -> None:
         """Sets the instruction with information for LLM."""
