@@ -1,7 +1,6 @@
 [
   {
     "prompt": "Replace all numbers in \"Hello 34 I'm 233 years old\" with NUMBERS"
-  },
   {
     "prompt": "Substitute the word 'cat' with 'dog' in 'The cat sat on the mat with another cat'"
   },
