@@ -6,7 +6,6 @@ from pydantic import BaseModel
 from src.encoder import Encoder
 from src.function import Function
 from src.llm import LLM
-from src.utils import escape
 
 
 REGEX_MAPPING = [
@@ -25,6 +24,11 @@ REGEX_MAPPING = [
     (['newline', 'newlines'], r'\\n+'),
     (['tab', 'tabs'], r'\\t+'),
 ]
+
+
+def escape(text: str) -> str:
+    """Escapes backslashes and double quotes in the text."""
+    return text.replace('\\', '\\\\').replace('"', '\\"')
 
 
 class CallMeMaybe(BaseModel):
@@ -67,7 +71,6 @@ class CallMeMaybe(BaseModel):
             t_instruction_prefix=t_instruction_prefix,
             t_instruction_suffix=t_instruction_suffix
         )
-        self.set_tools()
 
     def set_tools(self, func: Function | None = None) -> None:
         """Updates the LLM context with function definitions."""
@@ -141,7 +144,7 @@ class CallMeMaybe(BaseModel):
             next = self.llm.next_option(tokens, options)
             if arg_type == 'number' or arg_type == 'float':
                 param = self.encoder.decode(next)
-                if param.isdigit() and '.' not in param:
+                if param.isdigit():
                     next += self.encoder.encode('.0')
             tokens += next
             if arg_type == 'string':

@@ -67,14 +67,14 @@ class LLM(BaseModel):
         return lgt
 
     def _apply_mask(self,
-                    allowed_ids: set[int] | list[int],
+                    mask: set[int] | list[int],
                     logits: list[float]) -> list[float]:
         """
         Returns logits with mask applied by setting all forbidden
         token scores to -infinity.
         """
         masked = np.full_like(logits, -float('inf'))
-        for id in allowed_ids:
+        for id in mask:
             masked[id] = logits[id]
         return list(masked)
 

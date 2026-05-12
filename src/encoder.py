@@ -1,12 +1,18 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, PrivateAttr
 from typing import Any
-from src.utils import special_to_standart, standart_to_special
 import re
 
 
+WORD_PATTERN = re.compile(r'''
+    "(?:\\.|[^"])*"   |
+    '(?:\\.|[^'])*'   |
+    \S+
+''', re.VERBOSE)
+
+
 class Encoder(BaseModel):
-    trie: dict[str, Any]
-    vocab: list[str]
+    _trie: dict[str, Any] = PrivateAttr()
+    _vocab: list[str | None] = PrivateAttr()
 
     def __init__(self, tokens: dict[str, int]):
         vocab: list[str | None] = [None] * len(tokens)
@@ -18,7 +24,9 @@ class Encoder(BaseModel):
             for char in word:
                 node = node.setdefault(char, {})
             node['token'] = token
-        super().__init__(trie=trie, vocab=vocab)
+        super().__init__()
+        self._trie = trie
+        self._vocab = vocab
         print('Encoder created.')
 
     def encode(self, text: str) -> list[int]:
@@ -28,7 +36,7 @@ class Encoder(BaseModel):
         ids: list[int] = []
         i = 0
         while i < len(text):
-            node = self.trie
+            node = self._trie
             match_id = None
             match_len = -1
             j = i
@@ -49,7 +57,7 @@ class Encoder(BaseModel):
         """Returns all possible tokens from the string"""
 
         ids = set()
-        words = text.split()
+        words = WORD_PATTERN.findall(text)
         for word in words:
             word = word.strip('.,!?')
             word = word.strip('"\'')
@@ -69,13 +77,8 @@ class Encoder(BaseModel):
             full_value = colon_match.group(1).strip()
             ids.append(self.encode(full_value))
 
-        pattern = r'''
-            "(?:\\.|[^"])*"   |
-            '(?:\\.|[^'])*'   |
-            \S+
-        '''
         unescaped = text.replace('\\"', '"')
-        parts = re.findall(pattern, unescaped, re.VERBOSE)
+        parts = WORD_PATTERN.findall(unescaped)
         for part in parts:
             part = part.strip('".,!?:;\\')
             part = part.strip("'")
@@ -85,23 +88,26 @@ class Encoder(BaseModel):
 
         return ids
 
-    def encode_all(self, text: str) -> set[int]:
-        """Returns all possible tokens from the string"""
-
-        c_set = set(text)
-        ids = set()
-        for token_id in range(len(self.vocab)):
-            if self.vocab[token_id]:
-                if all(c in c_set for c in self.vocab[token_id]):
-                    ids.add(token_id)
-        return ids
-
     def decode(self, tokens: list[int] | int) -> str:
-        """Translates LLM tokens to human-readable text"""
-
+        """Translates LLM tokens to human-readable text."""
         if isinstance(tokens, int):
-            return self.vocab[tokens]
-        result = ""
-        for token in tokens:
-            result += self.vocab[token]
-        return special_to_standart(result)
+            return self._vocab[tokens] or ''
+        return special_to_standart(
+            ''.join(self._vocab[t] or '' for t in tokens)
+        )
+
+
+def special_to_standart(text: str) -> str:
+    """
+    Replaces special AI characters for space, tab and new line with
+    standart human ones
+    """
+    return text.replace('Ġ', ' ').replace('Ċ', '\n').replace('ĉ', '\t')
+
+
+def standart_to_special(text: str) -> str:
+    """
+    Replaces standart spaces, tabs and new line chars with special ones
+    AI can understand
+    """
+    return text.replace(' ', 'Ġ').replace('\n', 'Ċ').replace('\t', 'ĉ')
