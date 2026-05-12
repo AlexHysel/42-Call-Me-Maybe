@@ -15,4 +15,5 @@ def standart_to_special(text: str) -> str:
 
 
 def escape(text: str) -> str:
+    """Escapes backslashes and double quotes in the text."""
     return text.replace('\\', '\\\\').replace('"', '\\"')

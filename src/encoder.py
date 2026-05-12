@@ -1,38 +1,48 @@
 from pydantic import BaseModel
+from typing import Any
 from src.utils import special_to_standart, standart_to_special
 import re
 
 
 class Encoder(BaseModel):
-    token_of: dict[str, int]
+    trie: dict[str, Any]
     vocab: list[str]
 
     def __init__(self, tokens: dict[str, int]):
         vocab: list[str | None] = [None] * len(tokens)
+        trie: dict[str, Any] = {}
+        print('Encoder: Building trie and vocab...')
         for word, token in tokens.items():
             vocab[token] = word
-
-        super().__init__(token_of=tokens, vocab=vocab)
+            node = trie
+            for char in word:
+                node = node.setdefault(char, {})
+            node['token'] = token
+        super().__init__(trie=trie, vocab=vocab)
+        print('Encoder created.')
 
     def encode(self, text: str) -> list[int]:
-        """Translates human text to a list of tokens for LLM"""
+        """Translates human text to a list of tokens for LLM."""
 
         text = standart_to_special(text)
-        ids = []
-        while text:
+        ids: list[int] = []
+        i = 0
+        while i < len(text):
+            node = self.trie
             match_id = None
-            match_len = -2
-            for i in range(0, len(text) + 1):
-                substr = text[:i]
-                if substr in self.token_of:
-                    match_id = self.token_of[substr]
-                    match_len = len(substr)
+            match_len = -1
+            j = i
+            while j < len(text) and text[j] in node:
+                node = node[text[j]]
+                j += 1
+                if 'token' in node:
+                    match_id = node['token']
+                    match_len = j - i
             if match_id is not None:
                 ids.append(match_id)
-                text = text[match_len:]
+                i += match_len
             else:
-                text = text[1:]
-
+                i += 1
         return ids
 
     def encode_words(self, text: str) -> set[int]:
@@ -41,7 +51,8 @@ class Encoder(BaseModel):
         ids = set()
         words = text.split()
         for word in words:
-            word = word.strip("'\".,!?")
+            word = word.strip('.,!?')
+            word = word.strip('"\'')
             if not word:
                 continue
             for token_id in self.encode(word):
@@ -51,20 +62,27 @@ class Encoder(BaseModel):
 
     def encode_words_separated(self, text: str) -> list[list[int]]:
         """Returns tokenized prompt fragments."""
-        ids = []
-        unescaped = text.replace('\\"', '"')
+        ids: list[list[int]] = []
+
+        colon_match = re.search(r':\s*(.+)$', text)
+        if colon_match:
+            full_value = colon_match.group(1).strip()
+            ids.append(self.encode(full_value))
+
         pattern = r'''
             "(?:\\.|[^"])*"   |
             '(?:\\.|[^'])*'   |
             \S+
         '''
+        unescaped = text.replace('\\"', '"')
         parts = re.findall(pattern, unescaped, re.VERBOSE)
         for part in parts:
-            part = part.strip("'\".,!?:;\\")
+            part = part.strip('".,!?:;\\')
+            part = part.strip("'")
             if not part:
                 continue
             ids.append(self.encode(part))
-            ids.append(self.encode(' ' + part))
+
         return ids
 
     def encode_all(self, text: str) -> set[int]:

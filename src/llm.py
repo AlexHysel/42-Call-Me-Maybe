@@ -15,6 +15,7 @@ class LLM(BaseModel):
         self._llm = llm
         self._encoder = encoder
         self._t_instruction = None
+        print('LLM created.')
 
     def next_token(self,
                    tokens: list[int],
@@ -25,19 +26,19 @@ class LLM(BaseModel):
         best_token = int(np.argmax(logits))
         return best_token
 
-    def next_option(self,
-                    tokens: list[int],
-                    options: list[list[int]]
-                    ) -> list[int]:
+    def next_option(
+        self,
+        tokens: list[int],
+        options: list[list[int]]
+    ) -> list[int]:
         """Returns the best allowed option."""
-
         result: list[int] = []
+        context = tokens + result
         while options:
-            next_token = self.next_token(
-                tokens + result,
-                {option[0] for option in options}
-            )
+            allowed: set[int] = {option[0] for option in options}
+            next_token = self.next_token(context, allowed)
             result.append(next_token)
+            context.append(next_token)
             options = [
                 option[1:]
                 for option in options

@@ -1,64 +1,47 @@
 [
   {
-    "prompt": "Replace all numbers in \"Hello 34 I'm 233 years old\" with NUMBERS"
-  {
-    "prompt": "Substitute the word 'cat' with 'dog' in 'The cat sat on the mat with another cat'"
+    "prompt": "What is the product of 3 and 5?"
   },
   {
-    "prompt": "What is the sum of 2 and 3?"
+    "prompt": "What is the product of 12 and 4?"
   },
   {
-    "prompt": "What is the sum of 265 and 345?"
-  },
-  {
-    "prompt": "Greet shrek"
-  },
-  {
-    "prompt": "Greet john"
-  },
-  {
-    "prompt": "Reverse the string 'hello'"
-  },
-  {
-    "prompt": "Reverse the string 'world'"
-  },
-  {
-    "prompt": "What is the square root of 16?"
-  },
-  {
-    "prompt": "Calculate the square root of 144"
-  },
-  {
-    "prompt": "Replace all vowels in 'Programming is fun' with asterisks"
-  },
-  {
-    "prompt": "Is 42 an even number?"
+    "prompt": "Is 4 an even number?"
   },
   {
     "prompt": "Is 7 an even number?"
   },
   {
-    "prompt": "What is the product of 6 and 9?"
+    "prompt": "Calculate compound interest on 1234567.89 at 0.0375 rate for 23 years"
   },
   {
-    "prompt": "Multiply 12 by 15"
+    "prompt": "Execute SQL query 'SELECT * FROM users' on the production database"
   },
   {
-    "prompt": "Substitute digits in 'My phone is 123456' with NUM"
+    "prompt": "Run the query 'INSERT INTO logs VALUES (1, 2, 3)' on the system database"
   },
   {
-    "prompt": "Replace uppercase letters in 'Hello World' with x"
+    "prompt": "Read the file at /home/user/data.json with utf-8 encoding"
   },
   {
-    "prompt": "Greet alice"
+    "prompt": "Read C:\\Users\\john\\config.ini with latin-1 encoding"
   },
   {
-    "prompt": "Say hello to bob"
+    "prompt": "Format template: Hello {user}'s profile!"
   },
   {
-    "prompt": "Flip the string 'racecar'"
+    "prompt": "Format template: Say \"hello\" to {name}"
   },
   {
-    "prompt": "What is 99.5 plus 0.5?"
+    "prompt": "Raise 2 to the power of 10"
+  },
+  {
+    "prompt": "What is 3 to the power of 4?"
+  },
+  {
+    "prompt": "Concatenate 'hello' and ' world'"
+  },
+  {
+    "prompt": "Join the strings 'foo' and 'bar'"
   }
 ]

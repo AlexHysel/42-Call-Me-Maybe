@@ -80,30 +80,6 @@ class CallMeMaybe(BaseModel):
         new += self.t_instruction_suffix
         self.llm.set_instruction(new)
 
-    def define_function(self, tokens: list[int]) -> Function:
-        """Selects the best matching function using constrained decoding."""
-
-        candidates = [(f.t_name, n) for n, f in self.functions.items()]
-        result: list[int] = []
-
-        while candidates:
-            if len(candidates) == 1:
-                _, name = candidates[0]
-                return self.functions[name]
-
-            next_token = self.llm.next_token(
-                tokens + result,
-                {t_name[0] for t_name, _ in candidates}
-            )
-            result.append(next_token)
-            candidates = [
-                (t_name[1:], name)
-                for t_name, name in candidates
-                if t_name[0] == next_token and len(t_name) > 1
-            ]
-
-        return self.functions[self.encoder.decode(result)]
-
     def regex_pattern(self, text: str) -> list[int]:
         """Resolves the regex pattern from prompt keywords."""
 
@@ -162,7 +138,12 @@ class CallMeMaybe(BaseModel):
             if arg_type == 'string':
                 tokens += self.encoder.encode('"')
 
-            tokens += self.llm.next_option(tokens, options)
+            next = self.llm.next_option(tokens, options)
+            if arg_type == 'number' or arg_type == 'float':
+                param = self.encoder.decode(next)
+                if param.isdigit() and '.' not in param:
+                    next += self.encoder.encode('.0')
+            tokens += next
             if arg_type == 'string':
                 tokens += self.encoder.encode('"')
 
