@@ -1,7 +1,7 @@
 [
   {
-    "name": "fn_multiply_numbers",
-    "description": "Multiply two numbers together and return their product.",
+    "name": "fn_add_numbers",
+    "description": "Add two numbers together and return their sum.",
     "parameters": {
       "a": {
         "type": "number"
@@ -15,29 +15,35 @@
     }
   },
   {
-    "name": "fn_is_even",
-    "description": "Check if an integer is even, returns True if even, False if odd.",
+    "name": "fn_greet",
+    "description": "Generate a greeting message for a person by name.",
     "parameters": {
-      "n": {
-        "type": "integer"
+      "name": {
+        "type": "string"
       }
     },
     "returns": {
-      "type": "boolean"
+      "type": "string"
     }
   },
   {
-    "name": "fn_calculate_compound_interest",
-    "description": "Calculate compound interest: principal * (1 + rate)^years.",
+    "name": "fn_reverse_string",
+    "description": "Reverse a string and return the reversed result.",
     "parameters": {
-      "principal": {
+      "s": {
+        "type": "string"
+      }
+    },
+    "returns": {
+      "type": "string"
+    }
+  },
+  {
+    "name": "fn_get_square_root",
+    "description": "Calculate the square root of a number.",
+    "parameters": {
+      "a": {
         "type": "number"
-      },
-      "rate": {
-        "type": "number"
-      },
-      "years": {
-        "type": "integer"
       }
     },
     "returns": {
@@ -45,63 +51,21 @@
     }
   },
   {
-    "name": "fn_execute_sql_query",
-    "description": "Execute a SQL query on a specified database.",
+    "name": "fn_substitute_string_with_regex",
+    "description": "Replace all occurrences matching a regex pattern in a string.",
     "parameters": {
-      "query": {
+      "source_string": {
         "type": "string"
       },
-      "database": {
-        "type": "string"
-      }
-    },
-    "returns": {
-      "type": "string"
-    }
-  },
-  {
-    "name": "fn_read_file",
-    "description": "Read a file from the given path with specified encoding.",
-    "parameters": {
-      "path": {
+      "regex": {
         "type": "string"
       },
-      "encoding": {
+      "replacement": {
         "type": "string"
       }
     },
     "returns": {
       "type": "string"
     }
-  },
-  {
-    "name": "fn_format_template",
-    "description": "Format a template string containing placeholders.",
-    "parameters": {
-      "template": {
-        "type": "string"
-      }
-    },
-    "returns": {
-      "type": "string"
-    }
-  },
-  {
-    "name": "fn_power",
-    "description": "Raise a number to the power of an exponent.",
-    "parameters": {
-      "base": {"type": "number"},
-      "exponent": {"type": "number"}
-    },
-    "returns": {"type": "number"}
-  },
-  {
-    "name": "fn_concat_strings",
-    "description": "Concatenate two strings together.",
-    "parameters": {
-      "a": {"type": "string"},
-      "b": {"type": "string"}
-    },
-    "returns": {"type": "string"}
   }
 ]
